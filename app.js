@@ -615,3 +615,215 @@ init().catch(err => {
   console.error('StreamFlix init error:', err);
   showToast('JoyFlix: Failed to load content. Check your TMDB API key.', 5000);
 });
+
+// ══════════════════════════════════════════════════════════════
+// AI MOVIE PICKS — OpenAI integration
+// ══════════════════════════════════════════════════════════════
+
+const OPENAI_BASE   = 'https://api.openai.com/v1/chat/completions';
+const AI_KEY_STORE  = 'joyflix_openai_key';
+
+const aiOverlay    = $('ai-overlay');
+const aiModal      = $('aiModal');
+const aiClose      = $('aiClose');
+const aiNavBtn     = $('aiNavBtn');
+const aiKeyInput   = $('aiKeyInput');
+const aiSaveKey    = $('aiSaveKey');
+const aiKeyRow     = $('aiKeyRow');
+const aiPromptInput = $('aiPromptInput');
+const aiSubmitBtn  = $('aiSubmitBtn');
+const aiSubmitLabel = $('aiSubmitLabel');
+const aiResults    = $('aiResults');
+
+// ── Persist / load API key ────────────────────────────────────
+function loadSavedKey() {
+  const saved = localStorage.getItem(AI_KEY_STORE);
+  if (saved) {
+    aiKeyInput.value = saved;
+    aiKeyRow.classList.add('saved');
+    aiSaveKey.textContent = '✓ Saved';
+  }
+}
+function getAiKey() {
+  return aiKeyInput.value.trim() || localStorage.getItem(AI_KEY_STORE) || '';
+}
+
+aiSaveKey.onclick = () => {
+  const key = aiKeyInput.value.trim();
+  if (!key.startsWith('sk-')) { showToast('⚠️ Invalid key — should start with sk-'); return; }
+  localStorage.setItem(AI_KEY_STORE, key);
+  aiKeyRow.classList.add('saved');
+  aiSaveKey.textContent = '✓ Saved';
+  showToast('API key saved!');
+};
+
+// ── Open / close ──────────────────────────────────────────────
+function openAiModal() {
+  loadSavedKey();
+  aiOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => aiPromptInput.focus(), 350);
+}
+function closeAiModal() {
+  aiOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+aiNavBtn.onclick = openAiModal;
+aiClose.onclick  = closeAiModal;
+aiOverlay.addEventListener('click', e => { if (e.target === aiOverlay) closeAiModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeAiModal(); });
+
+// ── Example chips ─────────────────────────────────────────────
+document.querySelectorAll('.ai-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.ai-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    aiPromptInput.value = chip.dataset.prompt;
+    aiPromptInput.focus();
+  });
+});
+
+// ── Keyboard submit ───────────────────────────────────────────
+aiPromptInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) runAiPicks();
+});
+aiSubmitBtn.onclick = runAiPicks;
+
+// ── Core: ask GPT → get titles → search TMDB ─────────────────
+async function runAiPicks() {
+  const key    = getAiKey();
+  const prompt = aiPromptInput.value.trim();
+
+  if (!key) {
+    showToast('⚠️ Please enter your OpenAI API key first');
+    aiKeyInput.focus();
+    return;
+  }
+  if (!prompt) {
+    showToast('⚠️ Please describe what you want to watch');
+    aiPromptInput.focus();
+    return;
+  }
+
+  // Loading state
+  aiSubmitBtn.disabled = true;
+  aiSubmitLabel.innerHTML = '<i class="ph-fill ph-sparkle ai-spinning"></i> Finding picks…';
+  aiResults.classList.remove('visible');
+  aiResults.innerHTML = '';
+
+  try {
+    // ① Ask GPT for a list of movie/TV titles
+    const gptRes = await fetch(OPENAI_BASE, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        temperature: 0.8,
+        messages: [
+          {
+            role: 'system',
+            content:
+              'You are a movie and TV show expert. When given a user description, respond ONLY with a valid JSON array of exactly 12 titles. Example: ["Inception","The Dark Knight","Interstellar"]. Include both movies and TV shows when relevant. No explanations, no markdown, just raw JSON array.',
+          },
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
+      }),
+    });
+
+    if (!gptRes.ok) {
+      const err = await gptRes.json();
+      throw new Error(err.error?.message || `OpenAI error ${gptRes.status}`);
+    }
+
+    const gptData = await gptRes.json();
+    const raw      = gptData.choices?.[0]?.message?.content?.trim() || '[]';
+    let titles     = [];
+
+    try { titles = JSON.parse(raw); } catch {
+      // Try to extract JSON array from the text
+      const match = raw.match(/\[[\s\S]*\]/);
+      if (match) titles = JSON.parse(match[0]);
+    }
+
+    if (!titles.length) throw new Error('AI returned no titles');
+
+    // Show shimmer placeholders
+    aiResults.classList.add('visible');
+    aiResults.innerHTML = `
+      <p class="ai-results-label">✨ AI picks for: "${prompt}"</p>
+      <div class="ai-results-grid" id="aiGrid">
+        ${Array.from({length: titles.length}, () =>
+          `<div class="ai-shimmer-box"></div>`
+        ).join('')}
+      </div>
+    `;
+
+    // ② Search each title on TMDB in parallel
+    const tmdbResults = await Promise.all(
+      titles.map(async title => {
+        try {
+          const data = await tmdb('/search/multi', { query: title, page: 1 });
+          const hit  = (data.results || []).find(r =>
+            (r.media_type === 'movie' || r.media_type === 'tv') && r.poster_path
+          );
+          return hit ? { ...hit } : null;
+        } catch { return null; }
+      })
+    );
+
+    const found = tmdbResults.filter(Boolean);
+
+    if (!found.length) {
+      aiResults.innerHTML = `<p style="color:var(--text-mute);text-align:center;padding:1rem">No poster results found. Try a different prompt.</p>`;
+      return;
+    }
+
+    // ③ Render cards
+    const grid = document.createElement('div');
+    grid.className = 'ai-results-grid';
+    found.forEach(item => {
+      grid.appendChild(createCard(item, true));
+    });
+
+    const addRowBtn = document.createElement('button');
+    addRowBtn.className = 'ai-add-row-btn';
+    addRowBtn.innerHTML = '<i class="ph ph-rows"></i> Add to Home as a Row';
+    addRowBtn.onclick = () => {
+      closeAiModal();
+      createRow(`✨ ${prompt}`, found);
+      mainContent.prepend(mainContent.lastChild);
+      showToast('AI picks added to home! 🎉');
+    };
+
+    aiResults.innerHTML = '';
+    aiResults.classList.add('visible');
+
+    const label = document.createElement('p');
+    label.className = 'ai-results-label';
+    label.textContent = `✨ AI picks for: "${prompt}"`;
+
+    aiResults.appendChild(label);
+    aiResults.appendChild(addRowBtn);
+    aiResults.appendChild(grid);
+
+  } catch (err) {
+    console.error('AI Error:', err);
+    aiResults.classList.add('visible');
+    aiResults.innerHTML = `
+      <p style="color:#f87171;text-align:center;padding:1rem;font-size:.85rem">
+        ⚠️ ${err.message || 'Something went wrong. Check your API key and try again.'}
+      </p>
+    `;
+  } finally {
+    aiSubmitBtn.disabled = false;
+    aiSubmitLabel.innerHTML = '<i class="ph-fill ph-sparkle"></i> Generate Picks';
+  }
+}
+

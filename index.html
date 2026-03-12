@@ -30,6 +30,10 @@
         <i class="ph ph-magnifying-glass search-icon" id="searchToggle" title="Search"></i>
         <input type="text" id="searchInput" placeholder="Search movies, shows…" autocomplete="off" />
       </div>
+      <button class="btn-ai-nav" id="aiNavBtn" title="Ask AI for movie recommendations">
+        <i class="ph-fill ph-sparkle"></i>
+        <span>Ask AI</span>
+      </button>
       <div class="avatar" title="My Profile">JF</div>
     </div>
   </nav>
@@ -117,6 +121,57 @@
 
   <!-- ════════════════ TOAST ════════════════ -->
   <div id="toast" role="status" aria-live="polite"></div>
+
+  <!-- ════════════════ AI PROMPT MODAL ════════════════ -->
+  <div id="ai-overlay">
+    <div class="ai-modal" id="aiModal">
+
+      <div class="ai-modal-header">
+        <div class="ai-modal-title">
+          <i class="ph-fill ph-sparkle" style="color:var(--ai-purple)"></i>
+          AI Movie Picks
+        </div>
+        <button class="modal-close" id="aiClose"><i class="ph ph-x"></i></button>
+      </div>
+
+      <div class="ai-key-row" id="aiKeyRow">
+        <i class="ph ph-key" style="color:var(--text-mute);flex-shrink:0"></i>
+        <input
+          type="password"
+          id="aiKeyInput"
+          class="ai-key-field"
+          placeholder="Paste your OpenAI API key  (sk-…)"
+          autocomplete="off"
+        />
+        <button class="ai-save-key" id="aiSaveKey">Save</button>
+      </div>
+
+      <div class="ai-prompt-wrap">
+        <textarea
+          id="aiPromptInput"
+          class="ai-textarea"
+          placeholder="Describe what you want to watch…&#10;e.g. &quot;Dark psychological thrillers like Black Mirror&quot;"
+          rows="3"
+        ></textarea>
+        <div class="ai-example-chips">
+          <span class="ai-chip" data-prompt="Dark psychological thrillers like Inception">🧠 Dark thrillers</span>
+          <span class="ai-chip" data-prompt="Feel-good romantic comedies from the 2000s">💕 Rom-coms</span>
+          <span class="ai-chip" data-prompt="Epic sci-fi space adventures like Interstellar">🚀 Sci-fi space</span>
+          <span class="ai-chip" data-prompt="Scary horror movies that will keep me up at night">👻 Horror</span>
+          <span class="ai-chip" data-prompt="Critically acclaimed animated movies for all ages">🎨 Animation</span>
+          <span class="ai-chip" data-prompt="Best crime drama TV shows like Breaking Bad">🔫 Crime TV</span>
+        </div>
+      </div>
+
+      <button class="ai-submit-btn" id="aiSubmitBtn">
+        <i class="ph-fill ph-sparkle"></i>
+        <span id="aiSubmitLabel">Generate Picks</span>
+      </button>
+
+      <div class="ai-results" id="aiResults"></div>
+
+    </div>
+  </div>
 
   <script src="app.js"></script>
 </body>
