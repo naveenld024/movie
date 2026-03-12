@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JoyFlix – Watch Movies &amp; TV Shows</title>
+  <meta name="description" content="JoyFlix – Browse and stream the latest movies and TV shows in HD. Powered by TMDB." />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Android TV D-pad navigation styles -->
+  <link rel="stylesheet" href="tv-dpad.css" />
+  <!-- Phosphor Icons CDN -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Capacitor Bridge -->
+  <script src="capacitor.js"></script>
+</head>
+<body>
+
+  <!-- ════════════════ NAVBAR ════════════════ -->
+  <nav id="navbar">
+    <a href="#" class="nav-logo" id="homeBtn" aria-label="JoyFlix Home" tabindex="0">
+      <i class="ph-fill ph-film-strip" style="font-size:1.4rem"></i>
+      Joy<span>Flix</span>
+    </a>
+
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#" class="active" id="navHome" tabindex="0">Home</a></li>
+      <li><a href="#" id="navMovies" tabindex="0">Movies</a></li>
+      <li><a href="#" id="navTV" tabindex="0">TV Shows</a></li>
+      <li><a href="#" id="navTrending" tabindex="0">Trending</a></li>
+    </ul>
+
+    <div class="nav-right">
+      <div class="search-wrap">
+        <i class="ph ph-magnifying-glass search-icon" id="searchToggle" title="Search"></i>
+        <input type="text" id="searchInput" placeholder="Search movies, shows…" autocomplete="off" />
+      </div>
+      <div class="avatar" title="My Profile">JF</div>
+    </div>
+  </nav>
+
+  <!-- ════════════════ GENRE FILTER BAR ════════════════ -->
+  <div id="genre-bar"></div>
+
+  <!-- ════════════════ HERO ════════════════ -->
+  <section id="hero">
+    <div class="hero-bg" id="heroBg"></div>
+    <div class="hero-content">
+      <div class="hero-type-badge" id="heroTypeBadge">
+        <i class="ph-fill ph-fire-simple"></i> FEATURED
+      </div>
+      <h1 class="hero-title" id="heroTitle">Loading…</h1>
+      <div class="hero-meta" id="heroMeta"></div>
+      <p class="hero-overview" id="heroOverview"></p>
+      <div class="hero-actions">
+        <button class="btn-play" id="heroPlayBtn" tabindex="0">
+          <i class="ph-fill ph-play"></i> Play Now
+        </button>
+        <button class="btn-info" id="heroInfoBtn" tabindex="0">
+          <i class="ph ph-info"></i> More Info
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════════ SEARCH RESULTS PAGE ════════════════ -->
+  <div id="search-results-page">
+    <p class="search-results-title">Results for: <span id="searchQueryLabel"></span></p>
+    <div class="search-grid" id="searchGrid"></div>
+  </div>
+
+  <!-- ════════════════ MAIN CONTENT (rows) ════════════════ -->
+  <main id="main-content">
+    <!-- Rows are injected by JS -->
+  </main>
+
+  <!-- ════════════════ DETAIL MODAL ════════════════ -->
+  <div id="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modalClose" title="Close" tabindex="0">
+        <i class="ph ph-x"></i>
+      </button>
+
+      <div class="modal-hero" id="modalHero">
+        <img id="modalBackdrop" src="" alt="Backdrop" />
+        <div class="modal-hero-gradient"></div>
+      </div>
+
+      <div class="modal-body">
+        <h2 class="modal-title" id="modalTitle">Title</h2>
+        <div class="modal-meta" id="modalMeta"></div>
+        <p class="modal-overview" id="modalOverview"></p>
+
+        <!-- TV controls -->
+        <div id="tvControls" style="display:none">
+          <p class="season-label">Season</p>
+          <div class="season-ep-row" id="seasonBtns"></div>
+          <p class="season-label">Episode</p>
+          <div class="season-ep-row" id="episodeBtns"></div>
+        </div>
+
+        <div class="modal-actions" id="modalActions"></div>
+        <div class="genre-chips" id="modalGenres"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════ PLAYER OVERLAY ════════════════ -->
+  <div id="player-overlay">
+    <div class="player-topbar">
+      <button class="player-back" id="playerBack" tabindex="0">
+        <i class="ph ph-arrow-left"></i> Back
+      </button>
+      <span class="player-title" id="playerTitle"></span>
+    </div>
+    <iframe
+      id="player-iframe"
+      allowfullscreen
+      allow="autoplay; fullscreen; picture-in-picture"
+    ></iframe>
+  </div>
+
+  <!-- ════════════════ TOAST ════════════════ -->
+  <div id="toast" role="status" aria-live="polite"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

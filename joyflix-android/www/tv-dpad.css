@@ -1,0 +1,113 @@
+/* ============================================================
+   JOYFLIX — tv-dpad.css
+   D-pad / Remote control focus styles for Android TV
+   ============================================================ */
+
+/* Remove default outline on mouse, keep it for keyboard/dpad */
+* {
+    outline: none;
+}
+
+/* Focus ring for D-pad navigation */
+.card:focus,
+.card:focus-within,
+.btn-play:focus,
+.btn-info:focus,
+.btn-icon:focus,
+.genre-pill:focus,
+.num-btn:focus,
+.nav-links a:focus,
+.modal-close:focus,
+.player-back:focus,
+.card-play-btn:focus,
+.search-icon:focus,
+.avatar:focus {
+    outline: 3px solid #E50914 !important;
+    outline-offset: 3px;
+    box-shadow: 0 0 0 5px rgba(229, 9, 20, 0.35) !important;
+    border-radius: 6px;
+}
+
+/* Card focused state — scale it up like a hover */
+.card:focus {
+    transform: scale(1.28) !important;
+    z-index: 10;
+}
+
+.card:first-child:focus {
+    transform-origin: left center !important;
+}
+
+.card:last-child:focus {
+    transform-origin: right center !important;
+}
+
+/* Show card overlay when focused */
+.card:focus .card-overlay {
+    opacity: 1 !important;
+}
+
+/* Genre pills focused */
+.genre-pill:focus {
+    background: var(--red) !important;
+    border-color: var(--red) !important;
+    color: var(--white) !important;
+}
+
+/* Number buttons focused */
+.num-btn:focus {
+    background: var(--red) !important;
+    border-color: var(--red) !important;
+    color: var(--white) !important;
+}
+
+/* Make scrollable sliders navigable via arrow keys */
+.slider-track {
+    scroll-behavior: smooth;
+}
+
+/* Ensure all interactive elements are focusable */
+.card {
+    outline: none;
+}
+
+.btn-play {
+    outline: none;
+}
+
+.btn-info {
+    outline: none;
+}
+
+.genre-pill {
+    outline: none;
+}
+
+.card-play-btn {
+    outline: none;
+}
+
+.num-btn {
+    outline: none;
+}
+
+.modal-close {
+    outline: none;
+}
+
+.player-back {
+    outline: none;
+}
+
+/* TV: Increase touch/click targets slightly */
+@media (hover: none) and (pointer: coarse) {
+    :root {
+        --card-w: 220px;
+    }
+
+    .btn-play,
+    .btn-info {
+        padding: .9rem 2rem;
+        font-size: 1rem;
+    }
+}
